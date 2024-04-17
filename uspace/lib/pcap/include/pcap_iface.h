@@ -40,15 +40,12 @@
 
 typedef struct pcap_iface {
 	bool to_dump;
-	errno_t (*init)(const char *);
+	errno_t (*init)(void *);
 	void (*add_packet)(const void *data, size_t size);
 	void (*fini)(void);
 } pcap_iface_t;
 
-extern void pcap_close_file(void);
 extern errno_t pcap_iface_init(pcap_iface_t *);
-extern errno_t pcap_init(const char *);
-extern void pcap_add_packet(const void *data, size_t size);
 
 #endif
 /** @}

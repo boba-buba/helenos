@@ -42,7 +42,7 @@
  * @param header Header of the packet to be dumped.
  *
  */
-void pcap_set_time(pcap_packet_header_t *header, bool nano) // maybe without bool nano as nano is in pcapng
+static void pcap_set_time(pcap_packet_header_t *header)
 {
 	struct timespec ts;
 	getrealtime(&ts);
@@ -58,7 +58,7 @@ void pcap_set_time(pcap_packet_header_t *header, bool nano) // maybe without boo
 void pcap_writer_add_header(pcap_writer_t *writer)
 {
 	pcap_file_header_t file_header = { PCAP_MAGIC_MICRO, PCAP_MAJOR_VERSION, PCAP_MINOR_VERSION,
-		0x00000000, 0x00000000, (uint32_t)PCAP_SNAP_LEN, (uint32_t)PCAP_LINKTYPE_ETHERNET };
+		0x00000000, 0x00000000, writer->snaplen, writer->linktype };
 	writer->ops->write_buffer(writer, &file_header, sizeof(file_header));
 }
 
@@ -74,7 +74,7 @@ void pcap_writer_add_packet(pcap_writer_t *writer, const void *captured_packet, 
 	if (!writer->data)
 		return;
 	pcap_packet_header_t pcap_packet;
-	pcap_set_time(&pcap_packet, false);
+	pcap_set_time(&pcap_packet);
 	pcap_packet.original_length = (uint32_t)size;
 
 	if (PCAP_SNAP_LEN < size) {

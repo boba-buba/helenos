@@ -57,7 +57,7 @@ static void pcapdump_start_srv(ipc_call_t *icall, pcap_iface_t *iface)
 	if (iface->to_dump == true) {
 		iface->fini();
 	}
-	iface->init((const char *)data);
+	iface->init(data);
 
 	fibril_mutex_lock(&to_dump_mutex);
 	iface->to_dump = true;

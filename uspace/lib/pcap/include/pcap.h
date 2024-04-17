@@ -85,17 +85,17 @@ typedef struct {
 /** Interface for working with .pcap file
  */
 typedef struct pcap_writer {
+	uint32_t linktype;
+	uint32_t snaplen;
 	void *data;
 	pcap_writer_ops_t *ops;
 } pcap_writer_t;
 
-errno_t pcap_writer_to_file_init(pcap_writer_t *writer, const char *filename);
+extern errno_t pcap_writer_to_file_init(pcap_writer_t *writer, const char *filename);
+extern errno_t pcap_writer_serial_init(pcap_writer_t *writer, void *port);
 
 extern void pcap_writer_add_header(pcap_writer_t *);
-extern void pcap_writer_add_packet(
-    pcap_writer_t *writer, const void *captured_packet, size_t size);
-
-extern void pcap_set_time(pcap_packet_header_t *header, bool nano);
+extern void pcap_writer_add_packet(pcap_writer_t *writer, const void *captured_packet, size_t size);
 
 #endif
 

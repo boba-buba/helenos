@@ -68,20 +68,41 @@ static pcap_writer_t pcap_writer = {
 	.ops = &file_ops,
 };
 
-errno_t pcap_init(const char *name)
+// potential
+// static pcap_writer_ops_t serial_ops = {};
+
+static errno_t pcap_init_to_file(void *name)
 {
-	errno_t rc = pcap_writer_to_file_init(&pcap_writer, name);
+	const char *file_name = (const char *)name;
+	pcap_writer.linktype = PCAP_LINKTYPE_ETHERNET;
+	pcap_writer.snaplen = PCAP_SNAP_LEN;
+	errno_t rc = pcap_writer_to_file_init(&pcap_writer, file_name);
 	return rc;
 }
 
-void pcap_add_packet(const void *data, size_t size)
+// static errno_t pcap_init_serial(void *port)
+// {
+//	pcap_writer.linktype = PCAP_LINKTYPE_ETHERNET;
+//	pcap_writer.snaplen = PCAP_SNAP_LEN;
+//	errno_t rc = pcap_writer_serial_init(&pcap_writer, port);
+// 	return rc;
+// }
+
+/** General function for adding packet. calls impl from writer
+ *
+ */
+static void pcap_add_packet(const void *data, size_t size)
 {
 	if (pcap_writer.data == NULL)
 		return;
+	// that is that function that gets writer as this?
 	pcap_writer_add_packet(&pcap_writer, data, size);
 }
 
-void pcap_close_file(void)
+/** General fini function for any writer, calls impl from writer
+ *
+ */
+static void pcap_fini(void)
 {
 	pcap_writer.ops->close(&pcap_writer);
 	pcap_writer.data = NULL;
@@ -97,8 +118,10 @@ errno_t pcap_iface_init(pcap_iface_t *iface)
 
 	iface->to_dump = false;
 	iface->add_packet = pcap_add_packet;
-	iface->init = pcap_init;
-	iface->fini = pcap_close_file;
+
+	/* Here it is decided, whether it will serial, file ... */
+	iface->init = pcap_init_to_file;
+	iface->fini = pcap_fini;
 
 	return EOK;
 }
