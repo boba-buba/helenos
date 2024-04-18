@@ -848,18 +848,13 @@ errno_t nic_fun_add_to_cats(ddf_fun_t *fun)
 	errno_t rc;
 	rc = ddf_fun_add_to_category(fun, DEVICE_CATEGORY_NIC);
 	if (rc != EOK)
-		goto err_add_to_cat;
+		return rc;
 
 	rc = ddf_fun_add_to_category(fun, "pcap");
 	if (rc != EOK) {
-		//ddf_msg(LVL_ERROR, "Failed adding function to category pcap");
-		goto err_add_to_cat;
+		return rc;
 	}
 	return EOK;
-
-err_add_to_cat:
-	ddf_fun_unbind(fun);
-	return rc;
 }
 
 /** @}

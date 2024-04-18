@@ -183,13 +183,13 @@ errno_t pcapctl_dump_close(pcapctl_sess_t *sess)
  * @param sess session to start
  * @return EOK on success or an error code
  */
-errno_t pcapctl_dump_start(const char *name, pcapctl_sess_t *sess)
+errno_t pcapctl_dump_start(const char *name, pcapctl_sess_t *sess) //dump start to file
 {
 	errno_t rc;
 	async_exch_t *exch = async_exchange_begin(sess->sess);
 
 	size_t size = str_size(name);
-	aid_t req = async_send_0(exch, PCAP_CONTROL_SET_START, NULL);
+	aid_t req = async_send_0(exch, PCAP_CONTROL_SET_START, NULL); //set start to file
 
 	rc = async_data_write_start(exch, (void *) name, size);
 
