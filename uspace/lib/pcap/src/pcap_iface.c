@@ -48,6 +48,7 @@ static size_t pcap_file_w16(pcap_writer_t *writer, uint16_t data)
 
 static size_t pcap_file_wbuffer(pcap_writer_t *writer, const void *data, size_t size)
 {
+	// How to write without buffering
 	return fwrite(data, 1, size, (FILE *)writer->data);
 }
 
@@ -68,47 +69,64 @@ static pcap_writer_t pcap_writer = {
 	.ops = &file_ops,
 };
 
-// potential
-// static pcap_writer_ops_t serial_ops = {};
-
-static errno_t pcap_init_to_file(void *name)
+/** Empty function to get rid of if clauses.
+ * Set by default.
+ */
+static void pcap_add_packet_empty(const void *, size_t)
 {
-	const char *file_name = (const char *)name;
-	pcap_writer.linktype = PCAP_LINKTYPE_ETHERNET;
-	pcap_writer.snaplen = PCAP_SNAP_LEN;
-	errno_t rc = pcap_writer_to_file_init(&pcap_writer, file_name);
-	return rc;
 }
 
-// static errno_t pcap_init_serial(void *port)
-// {
-//	pcap_writer.linktype = PCAP_LINKTYPE_ETHERNET;
-//	pcap_writer.snaplen = PCAP_SNAP_LEN;
-//	errno_t rc = pcap_writer_serial_init(&pcap_writer, port);
-// 	return rc;
-// }
+
+/** Empty function to get rid of if clauses.
+ * Set by default.
+ */
+static void pcap_fini_empty(pcap_iface_t *)
+{
+}
 
 /** General function for adding packet. calls impl from writer
  *
  */
 static void pcap_add_packet(const void *data, size_t size)
 {
-	if (pcap_writer.data == NULL)
-		return;
-	// that is that function that gets writer as this?
 	pcap_writer_add_packet(&pcap_writer, data, size);
 }
 
 /** General fini function for any writer, calls impl from writer
  *
  */
-static void pcap_fini(void)
+static void pcap_fini(pcap_iface_t *iface)
 {
 	pcap_writer.ops->close(&pcap_writer);
 	pcap_writer.data = NULL;
+
+	iface->add_packet = pcap_add_packet_empty;
+	iface->fini = pcap_fini_empty;
 }
 
-/** Initialize interface for dumping packets
+/** Sort of ctor for dumping to file.
+ * Fills iface with actual implementations for
+ * dumping to file.
+ * Called when user wants to start dumping.
+ */
+errno_t pcap_init_to_file(pcap_iface_t *iface, void *name)
+{
+	iface->add_packet = pcap_add_packet;
+	iface->fini = pcap_fini;
+
+	const char *file_name = (const char *)name;
+
+	pcap_writer.linktype = PCAP_LINKTYPE_ETHERNET;
+	pcap_writer.snaplen = PCAP_SNAP_LEN;
+
+	errno_t rc = pcap_writer_to_file_init(&pcap_writer, file_name);
+
+	return rc;
+}
+
+/** Initialize interface for dumping packets. Sort of empty ctor.
+ * Called when device is added to category pcap,
+ * or when the port with PCAP_CONTROL_IFACE is called.
  *
  * @param iface Device dumping interface
  *
@@ -117,11 +135,8 @@ errno_t pcap_iface_init(pcap_iface_t *iface)
 {
 
 	iface->to_dump = false;
-	iface->add_packet = pcap_add_packet;
-
-	/* Here it is decided, whether it will serial, file ... */
-	iface->init = pcap_init_to_file;
-	iface->fini = pcap_fini;
+	iface->add_packet = pcap_add_packet_empty;
+	iface->fini = pcap_fini_empty;
 
 	return EOK;
 }

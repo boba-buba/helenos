@@ -55,9 +55,9 @@ static void pcapdump_start_srv(ipc_call_t *icall, pcap_iface_t *iface)
 
 	/** When try to start when already started, close current and starts new */
 	if (iface->to_dump == true) {
-		iface->fini();
+		iface->fini(iface);
 	}
-	iface->init(data);
+	pcap_init_to_file(iface, data);
 
 	fibril_mutex_lock(&to_dump_mutex);
 	iface->to_dump = true;
@@ -78,7 +78,7 @@ static void pcapdump_stop_srv(ipc_call_t *icall, pcap_iface_t *iface)
 	iface->to_dump = false;
 	fibril_mutex_unlock(&to_dump_mutex);
 
-	iface->fini();
+	iface->fini(iface);
 	async_answer_0(icall, EOK);
 }
 
@@ -145,15 +145,6 @@ errno_t pcapdump_init(pcap_iface_t *iface)
  */
 void pcapdump_packet(pcap_iface_t *iface, const void *data, size_t size)
 {
-
-	if (iface == NULL) {
-		return;
-	}
-
-	if (!iface->to_dump) {
-		return;
-	}
-
 	iface->add_packet(data, size);
 }
 
